@@ -22,7 +22,7 @@ RDEPEND="|| ( >=sys-apps/portage-2.1.6
 			  sys-apps/paludis )"
 
 src_compile() {
-	CABAL_CONFIGURE_FLAGS="--bindir=/usr/sbin"
+	CABAL_CONFIGURE_FLAGS="--bindir=${EROOT}/usr/sbin"
 
 	cabal_src_compile
 }
