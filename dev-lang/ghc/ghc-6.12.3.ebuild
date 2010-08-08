@@ -45,8 +45,7 @@ arch_binaries="$arch_binaries ppc? ( mirror://gentoo/ghc-bin-${PV}-ppc.tbz2 )"
 
 # various ports:
 arch_binaries="$arch_binaries x86-fbsd? ( http://code.haskell.org/~slyfox/ghc-x86-fbsd/ghc-bin-${PV}-x86-fbsd.tbz2 )"
-
-# arch_binaries="$arch_binaries x86-macos? ( http://www.haskell.org/ghc/dist/6.10.4/maeder/ghc-6.10.4-i386-apple-darwin.tar.bz2 )"
+arch_binaries="$arch_binaries x86-macos? ( http://elisp.net/gentoo/ghc-bin-${PV}-x86-macos.tbz2 )"
 
 SRC_URI="!binary? ( http://darcs.haskell.org/download/dist/${PV}/${P}-src.tar.bz2 )
 	!ghcbootstrap? ( $arch_binaries )"
@@ -165,16 +164,16 @@ src_unpack() {
 	else
 		if ! use ghcbootstrap; then
 			# Relocate from /usr to ${WORKDIR}/usr
-			sed -i -e "s|/usr|${WORKDIR}/usr|g" \
-				"${WORKDIR}/usr/bin/ghc-${PV}" \
-				"${WORKDIR}/usr/bin/ghci-${PV}" \
-				"${WORKDIR}/usr/bin/ghc-pkg-${PV}" \
-				"${WORKDIR}/usr/bin/hsc2hs" \
-				"${WORKDIR}/usr/$(get_libdir)/${P}/package.conf.d/"* \
+			sed -i -e "s|${EROOT}/usr|${WORKDIR}/${EROOT}/usr|g" \
+				"${WORKDIR}/${EROOT}/usr/bin/ghc-${PV}" \
+				"${WORKDIR}/${EROOT}/usr/bin/ghci-${PV}" \
+				"${WORKDIR}/${EROOT}/usr/bin/ghc-pkg-${PV}" \
+				"${WORKDIR}/${EROOT}/usr/bin/hsc2hs" \
+				"${WORKDIR}/${EROOT}/usr/$(get_libdir)/${P}/package.conf.d/"* \
 				|| die "Relocating ghc from /usr to workdir failed"
 
 			# regenerate the binary package cache
-			"${WORKDIR}/usr/bin/ghc-pkg" recache
+			"${WORKDIR}/${EROOT}/usr/bin/ghc-pkg" recache
 		fi
 
 		sed -i -e "s|\"\$topdir\"|\"\$topdir\" ${GHC_CFLAGS}|" \
@@ -234,8 +233,8 @@ src_compile() {
 		echo '# Gentoo changes' > mk/build.mk
 
 		# Put docs into the right place, ie /usr/share/doc/ghc-${PV}
-		echo "docdir = ${EPREFIX}/usr/share/doc/${P}" >> mk/build.mk
-		echo "htmldir = ${EPREFIX}/usr/share/doc/${P}" >> mk/build.mk
+		echo "docdir = ${EROOT}/usr/share/doc/${P}" >> mk/build.mk
+		echo "htmldir = ${EROOT}/usr/share/doc/${P}" >> mk/build.mk
 
 		# We also need to use the GHC_CFLAGS flags when building ghc itself
 		echo "SRC_HC_OPTS+=${GHC_CFLAGS}" >> mk/build.mk
@@ -285,7 +284,7 @@ src_compile() {
 		# Get ghc from the unpacked binary .tbz2
 		# except when bootstrapping we just pick ghc up off the path
 		if ! use ghcbootstrap; then
-			export PATH="${WORKDIR}/usr/bin:${PATH}"
+			export PATH="${WORKDIR}/${EROOT}/usr/bin:${PATH}"
 		fi
 
 		econf || die "econf failed"
