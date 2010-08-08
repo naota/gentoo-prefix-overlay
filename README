@@ -1,0 +1,9 @@
+自分で直した Gentoo Prefix の ebuild を設置。
+
+${EPREFIX}/etc/layman/layman.cfg の overlays のところに http://github.com/naota/gentoo-prefix-overlay/raw/master/repository.xml をこんな感じでに追加する
+
+overlays  : http://www.gentoo.org/proj/en/overlays/repositories.xml
+	  http://github.com/naota/gentoo-prefix-overlay/raw/master/repository.xml
+
+そして layman -a naota-prefix すれば使えるはず。
+
