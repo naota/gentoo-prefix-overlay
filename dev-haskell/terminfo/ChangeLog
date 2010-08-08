@@ -1,0 +1,24 @@
+# ChangeLog for dev-haskell/terminfo
+# Copyright 1999-2010 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/dev-haskell/terminfo/ChangeLog,v 1.5 2010/07/20 13:33:40 josejx Exp $
+
+  20 Jul 2010; Joseph Jezak <josejx@gentoo.org> terminfo-0.3.1.1.ebuild:
+  Marked ~ppc.
+
+  10 Jul 2010; Sergei Trofimovich <slyfox@gentoo.org>
+  terminfo-0.3.1.1.ebuild:
+  marked ~ia64
+
+  08 Jul 2010; Sergei Trofimovich <slyfox@gentoo.org>
+  terminfo-0.3.1.1.ebuild:
+  ~alpha keyworded
+
+  01 Apr 2010; Fabian Groffen <grobian@gentoo.org> terminfo-0.3.1.1.ebuild:
+  Marked ~ppc-macos
+
+*terminfo-0.3.1.1 (28 Mar 2010)
+
+  28 Mar 2010; Lennart Kolmodin <kolmodin@gentoo.org>
+  +terminfo-0.3.1.1.ebuild, +metadata.xml:
+  Initial version, dependency of haskeline.
+

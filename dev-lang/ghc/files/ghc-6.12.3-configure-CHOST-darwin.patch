@@ -1,0 +1,42 @@
+--- configure.ac.orig	2010-08-03 03:07:58.000000000 +0900
++++ configure.ac	2010-08-03 03:09:38.000000000 +0900
+@@ -225,7 +225,7 @@
+                 echo "Bootstrapping GHC is a cross compiler. This probably isn't going to work"
+         fi
+ fi
+-build=`echo "$build" | sed -e 's/linux-gnu/linux/' -e 's/-pc-/-unknown-/' -e 's/-gentoo-/-unknown-/' -e 's/freebsd.*$/freebsd/'`
++build=`echo "$build" | sed -e 's/linux-gnu/linux/' -e 's/-pc-/-unknown-/' -e 's/-gentoo-/-unknown-/' -e 's/freebsd.*$/freebsd/' -e 's/darwin.*$/darwin/'`
+ [build=`echo "$build" | sed -e 's/i[4-6]86/i386/'`] # escaping square bracket
+ 
+ # We have to run these unconditionally, but we may discard their
+@@ -260,7 +260,7 @@
+     GHC_CONVERT_VENDOR([$build_vendor], [BuildVendor])
+     GHC_CONVERT_OS([$build_os], [BuildOS])
+ fi
+-host=`echo "$host" | sed -e 's/linux-gnu/linux/' -e 's/-pc-/-unknown-/' -e 's/-gentoo-/-unknown-/' -e 's/freebsd.*$/freebsd/'`
++host=`echo "$host" | sed -e 's/linux-gnu/linux/' -e 's/-pc-/-unknown-/' -e 's/-gentoo-/-unknown-/' -e 's/freebsd.*$/freebsd/' -e 's/darwin.*$/darwin/'`
+ [host=`echo "$host" | sed -e 's/i[4-6]86/i386/'`] # escaping square bracket
+ 
+ if test "$host_alias" = ""
+@@ -282,7 +282,7 @@
+     GHC_CONVERT_VENDOR([$host_vendor], [HostVendor])
+     GHC_CONVERT_OS([$host_os], [HostOS])
+ fi
+-target=`echo "$target" | sed -e 's/linux-gnu/linux/' -e 's/-pc-/-unknown-/' -e 's/-gentoo-/-unknown-/' -e 's/freebsd.*$/freebsd/'`
++target=`echo "$target" | sed -e 's/linux-gnu/linux/' -e 's/-pc-/-unknown-/' -e 's/-gentoo-/-unknown-/' -e 's/freebsd.*$/freebsd/' -e 's/darwin.*$/darwin/'`
+ [target=`echo "$target" | sed -e 's/i[4-6]86/i386/'`] # escaping square bracket
+ 
+ if test "$target_alias" = ""
+--- aclocal.m4.orig	2010-08-03 03:29:26.000000000 +0900
++++ aclocal.m4	2010-08-03 03:33:36.000000000 +0900
+@@ -1358,6 +1358,10 @@
+   freebsd*)
+     $2="freebsd"
+     ;;
++  # for things like darwin10
++  darwin*)
++    $2="darwin"
++    ;;
+   *)
+     echo "Unknown OS $1"
+     exit 1

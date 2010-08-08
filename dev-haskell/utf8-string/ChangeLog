@@ -1,0 +1,35 @@
+# ChangeLog for dev-haskell/utf8-string
+# Copyright 1999-2010 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/dev-haskell/utf8-string/ChangeLog,v 1.7 2010/07/20 13:32:57 josejx Exp $
+
+  20 Jul 2010; Joseph Jezak <josejx@gentoo.org> utf8-string-0.3.6.ebuild:
+  Marked ~ppc.
+
+  10 Jul 2010; Sergei Trofimovich <slyfox@gentoo.org>
+  utf8-string-0.3.6.ebuild:
+  marked ~ia64
+
+  08 Jul 2010; Sergei Trofimovich <slyfox@gentoo.org>
+  utf8-string-0.3.6.ebuild:
+  ~alpha keyworded
+
+  01 Apr 2010; Fabian Groffen <grobian@gentoo.org> utf8-string-0.3.6.ebuild:
+  Marked ~ppc-macos
+
+*utf8-string-0.3.6 (28 Mar 2010)
+
+  28 Mar 2010; Lennart Kolmodin <kolmodin@gentoo.org>
+  -utf8-string-0.3.5.ebuild, +utf8-string-0.3.6.ebuild:
+  Version bump.
+
+  28 Mar 2010; Lennart Kolmodin <kolmodin@gentoo.org>
+  utf8-string-0.3.5.ebuild:
+  Added ~ppc64 keyword, tested by trofi.
+
+*utf8-string-0.3.5 (27 Oct 2009)
+
+  27 Oct 2009; <kolmodin@gentoo.org> +utf8-string-0.3.5.ebuild,
+  +metadata.xml:
+  Initial version of utf8-string, a UTF8 layer for IO and Strings for
+  Haskell.
+
