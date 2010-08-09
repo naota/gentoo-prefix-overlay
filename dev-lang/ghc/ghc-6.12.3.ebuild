@@ -154,7 +154,7 @@ src_unpack() {
 		# Modify the wrapper script from the binary tarball to use GHC_CFLAGS.
 		# See bug #313635.
 		sed -i -e "s|\"\$topdir\"|\"\$topdir\" ${GHC_CFLAGS}|" \
-			"${WORKDIR}/usr/bin/ghc-${PV}"
+			"${WORKDIR}/${EROOT}/usr/bin/ghc-${PV}"
 	fi
 
 	if use binary; then
