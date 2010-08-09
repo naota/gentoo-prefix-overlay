@@ -164,7 +164,10 @@ src_unpack() {
 	else
 		if ! use ghcbootstrap; then
 			# Relocate from /usr to ${WORKDIR}/usr
-			sed -i -e "s|${EROOT}/usr|${WORKDIR}/usr|g" \
+			MY_EROOT=""	
+			use prefix && MY_EROOT="/Users/naota/Gentoo"
+			sed -i -e "s|${MY_EROOT}/usr|${WORKDIR}/usr|g" \
+				-e "s|${MY_EROOT}/bin|${EROOT}/bin|g" \
 				"${WORKDIR}/usr/bin/ghc-${PV}" \
 				"${WORKDIR}/usr/bin/ghci-${PV}" \
 				"${WORKDIR}/usr/bin/ghc-pkg-${PV}" \
