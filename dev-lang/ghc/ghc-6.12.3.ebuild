@@ -154,7 +154,7 @@ src_unpack() {
 		# Modify the wrapper script from the binary tarball to use GHC_CFLAGS.
 		# See bug #313635.
 		sed -i -e "s|\"\$topdir\"|\"\$topdir\" ${GHC_CFLAGS}|" \
-			"${WORKDIR}/${EROOT}/usr/bin/ghc-${PV}"
+			"${WORKDIR}/usr/bin/ghc-${PV}"
 	fi
 
 	if use binary; then
@@ -164,16 +164,16 @@ src_unpack() {
 	else
 		if ! use ghcbootstrap; then
 			# Relocate from /usr to ${WORKDIR}/usr
-			sed -i -e "s|${EROOT}/usr|${WORKDIR}/${EROOT}/usr|g" \
-				"${WORKDIR}/${EROOT}/usr/bin/ghc-${PV}" \
-				"${WORKDIR}/${EROOT}/usr/bin/ghci-${PV}" \
-				"${WORKDIR}/${EROOT}/usr/bin/ghc-pkg-${PV}" \
-				"${WORKDIR}/${EROOT}/usr/bin/hsc2hs" \
-				"${WORKDIR}/${EROOT}/usr/$(get_libdir)/${P}/package.conf.d/"* \
+			sed -i -e "s|${EROOT}/usr|${WORKDIR}/usr|g" \
+				"${WORKDIR}/usr/bin/ghc-${PV}" \
+				"${WORKDIR}/usr/bin/ghci-${PV}" \
+				"${WORKDIR}/usr/bin/ghc-pkg-${PV}" \
+				"${WORKDIR}/usr/bin/hsc2hs" \
+				"${WORKDIR}/usr/$(get_libdir)/${P}/package.conf.d/"* \
 				|| die "Relocating ghc from /usr to workdir failed"
 
 			# regenerate the binary package cache
-			"${WORKDIR}/${EROOT}/usr/bin/ghc-pkg" recache
+			"${WORKDIR}/usr/bin/ghc-pkg" recache
 		fi
 
 		sed -i -e "s|\"\$topdir\"|\"\$topdir\" ${GHC_CFLAGS}|" \
@@ -284,7 +284,7 @@ src_compile() {
 		# Get ghc from the unpacked binary .tbz2
 		# except when bootstrapping we just pick ghc up off the path
 		if ! use ghcbootstrap; then
-			export PATH="${WORKDIR}/${EROOT}/usr/bin:${PATH}"
+			export PATH="${WORKDIR}/usr/bin:${PATH}"
 		fi
 
 		econf || die "econf failed"
