@@ -20,10 +20,10 @@ RDEPEND="${DEPEND}"
 
 src_configure() {
 	./configure \
-		-prefix /usr \
-	    -bindir /usr/bin \
-		-libdir /usr/$(get_libdir)/ocaml \
-		-mandir /usr/share/man || die "configure failed"
+		-prefix "${EPREFIX}"/usr \
+		-bindir "${EPREFIX}"/usr/bin \
+		-libdir "${EPREFIX}"/usr/$(get_libdir)/ocaml \
+		-mandir "${EPREFIX}"/usr/share/man || die "configure failed"
 }
 
 src_compile(){
@@ -37,7 +37,9 @@ src_compile(){
 src_install() {
 	emake DESTDIR="${D}" install || die "emake install failed"
 	# findlib support
-	insinto "$(ocamlfind printconf destdir)/${PN}"
+	local dir="$(ocamlfind printconf destdir)/${PN}"
+	dir="${dir#${EPREFIX}}"
+	insinto "${dir}"
 	doins etc/META || die "failed to install META file for findlib support"
 
 	use doc && dohtml -r doc/*
