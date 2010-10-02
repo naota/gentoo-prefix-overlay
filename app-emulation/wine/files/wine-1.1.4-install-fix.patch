@@ -1,0 +1,22 @@
+From: Alexandre Julliard <julliard@winehq.org>
+Date: Mon, 8 Sep 2008 10:37:56 +0000 (+0200)
+Subject: makefile: Fix dependency for programs install.
+X-Git-Url: http://source.winehq.org/git/wine.git/?a=commitdiff_plain;h=78c79ba349deea39
+
+makefile: Fix dependency for programs install.
+---
+
+diff --git a/Makefile.in b/Makefile.in
+index 0b2c6c0..1dd8ef1 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -96,7 +96,8 @@ include/__install__ include/__install-dev__: include libs tools
+ libs/__install__ libs/__install-lib__ libs/__install-dev__: libs
+ loader/__install__ loader/__install-lib__: libs tools
+ server/__install__ server/__install-lib__: libs tools
+-programs/__install__ programs/__install-lib__: libs tools include dlls/__install-lib__
++programs/__install__: libs tools include dlls/__install__
++programs/__install-lib__: libs tools include dlls/__install-lib__
+ tools/__install__ tools/__install-lib__ tools/__install-dev__: tools
+ 
+ RECURSE_TARGETS = \
