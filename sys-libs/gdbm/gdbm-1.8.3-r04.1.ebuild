@@ -19,7 +19,7 @@ src_unpack() {
 	unpack ${A}
 	cd "${S}"
 	epatch "${FILESDIR}"/${P}-fix-install-ownership.patch #24178
-	epatch "${FILESDIR}"/${P}-compat-linking.patch #165263, #223865
+	# epatch "${FILESDIR}"/${P}-compat-linking.patch #165263, #223865
 	epatch "${FILESDIR}"/${P}-build.patch #209730
 	elibtoolize
 	append-lfs-flags
@@ -36,7 +36,7 @@ src_compile() {
 }
 
 src_install() {
-	emake -j1 INSTALL_ROOT="${D}" install-compat install || die
+	emake -j1 INSTALL_ROOT="${D}" install install-compat || die
 	mv "${ED}"/usr/include/gdbm/gdbm.h "${ED}"/usr/include/ || die
 	dodoc ChangeLog NEWS README
 }
