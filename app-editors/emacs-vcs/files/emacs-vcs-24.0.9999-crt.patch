@@ -1,0 +1,12 @@
+--- configure.in~	2011-05-03 15:01:31.000000000 +0900
++++ configure.in	2011-05-03 17:57:03.000000000 +0900
+@@ -1024,7 +1024,8 @@
+   ## Some platforms don't use any of these files, so it is not
+   ## appropriate to put this test outside the if block.
+   test -e $CRT_DIR/crtn.o || test -e $CRT_DIR/crt0.o || \
+-    AC_MSG_ERROR([crt*.o not found in specified location.])
++    test -e $CRT_DIR/crt1.o || \
++      AC_MSG_ERROR([crt*.o not found in specified location.])
+ 
+ fi
+ 

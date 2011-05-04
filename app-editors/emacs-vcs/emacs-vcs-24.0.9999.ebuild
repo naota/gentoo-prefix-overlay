@@ -2,15 +2,17 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/app-editors/emacs-vcs/emacs-vcs-24.0.9999.ebuild,v 1.5 2010/05/08 08:31:19 ulm Exp $
 
-EAPI=2
+EAPI=4
 
 inherit autotools elisp-common eutils flag-o-matic multilib
 
 if [ "${PV##*.}" = "9999" ]; then
+	EBZR_PROJECT="emacs"
+	EBZR_BRANCH="trunk"
+	EBZR_REPO_URI="bzr://bzr.savannah.gnu.org/emacs/${EBZR_BRANCH}/"
+	# "Nosmart" is much faster for initial branching.
+	EBZR_INITIAL_URI="nosmart+${EBZR_REPO_URI}"
 	inherit bzr
-	EMACS_BRANCH="trunk"
-	EBZR_REPO_URI="http://bzr.savannah.gnu.org/r/emacs/${EMACS_BRANCH}/"
-	EBZR_CACHE_DIR="emacs-${EMACS_BRANCH#emacs-}"
 	SRC_URI=""
 else
 	SRC_URI="mirror://gentoo/emacs-${PV}.tar.gz
@@ -28,7 +30,8 @@ HOMEPAGE="http://www.gnu.org/software/emacs/"
 LICENSE="GPL-3 FDL-1.3 BSD as-is MIT W3C unicode"
 SLOT="24"
 KEYWORDS="~amd64-linux ~x86-linux ~ppc-macos ~x86-macos"
-IUSE="alsa dbus gconf gif gpm gtk gzip-el hesiod jpeg kerberos m17n-lib motif ns png sound source svg tiff toolkit-scroll-bars X Xaw3d xft +xpm"
+IUSE="alsa aqua dbus gconf gif gnutls gpm gtk gzip-el hesiod imagemagick jpeg kerberos libxml2 m17n-lib motif png selinux sound source svg tiff toolkit-scroll-bars X Xaw3d xft +xpm"
+REQUIRED_USE="aqua? ( !X )"
 RESTRICT="strip"
 
 RDEPEND="sys-libs/ncurses
@@ -39,17 +42,21 @@ RDEPEND="sys-libs/ncurses
 	alsa? ( media-libs/alsa-lib )
 	gpm? ( sys-libs/gpm )
 	dbus? ( sys-apps/dbus )
+	gnutls? ( net-libs/gnutls )
+	selinux? ( sys-libs/libselinux )
 	X? (
 		x11-libs/libXmu
 		x11-libs/libXt
 		x11-misc/xbitmaps
 		gconf? ( >=gnome-base/gconf-2.26.2 )
+		libxml2? ( >=dev-libs/libxml2-2.2.0 )
 		gif? ( media-libs/giflib )
-		jpeg? ( media-libs/jpeg:0 )
+		jpeg? ( virtual/jpeg )
 		png? ( media-libs/libpng )
 		svg? ( >=gnome-base/librsvg-2.0 )
 		tiff? ( media-libs/tiff )
 		xpm? ( x11-libs/libXpm )
+		imagemagick? ( >=media-gfx/imagemagick-6.6.2 )
 		xft? (
 			media-libs/fontconfig
 			media-libs/freetype
@@ -62,7 +69,7 @@ RDEPEND="sys-libs/ncurses
 		gtk? ( x11-libs/gtk+:2 )
 		!gtk? (
 			Xaw3d? ( x11-libs/Xaw3d )
-			!Xaw3d? ( motif? ( x11-libs/openmotif ) )
+			!Xaw3d? ( motif? ( >=x11-libs/openmotif-2.3:0 ) )
 		)
 	)"
 
@@ -77,32 +84,26 @@ EMACS_SUFFIX="emacs-${SLOT}"
 SITEFILE="20${PN}-${SLOT}-gentoo.el"
 
 pkg_setup() {
-	local cvsdir="${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/cvs-src/emacs"
-	if [ -d "${cvsdir}" ]; then
-		ewarn "GNU Emacs upstream has moved from CVS to Bazaar."
-		ewarn "Therefore, you may remove the old CVS directory:"
-		ewarn "rm -rf ${cvsdir}"
+	local olddir="${EBZR_STORE_DIR}/emacs-${EBZR_BRANCH#emacs-}"
+	if [ -d "${olddir}" ]; then
+		ewarn "bzr.eclass uses branches instead of checkouts now."
+		ewarn "Therefore, you may remove the old bzr checkout:"
+		ewarn "rm -rf ${olddir}"
 	fi
 }
 
 src_prepare() {
 	if [ "${PV##*.}" = "9999" ]; then
-		FULL_VERSION=$(grep 'const char emacs_version' src/emacs.c \
-			| sed -e 's/^[^"]*"\([^"]*\)".*$/\1/')
+		FULL_VERSION=$(sed -n 's/^AC_INIT(emacs,[ \t]*\([^ \t,)]*\).*/\1/p' \
+			configure.in)
 		[ "${FULL_VERSION}" ] || die "Cannot determine current Emacs version"
 		echo
-		einfo "Emacs branch: ${EMACS_BRANCH}"
+		einfo "Emacs branch: ${EBZR_BRANCH}"
 		einfo "Emacs version number: ${FULL_VERSION}"
-		[ "${FULL_VERSION%.*}" = ${PV%.*} ] \
+		[[ ${FULL_VERSION} =~ ^${PV%.*}(\..*)?$ ]] \
 			|| die "Upstream version number changed to ${FULL_VERSION}"
 		echo
-	#else
-	#	EPATCH_SUFFIX=patch epatch
 	fi
-
-	sed -i -e "s:/usr/lib/crtbegin.o:$(`tc-getCC` -print-file-name=crtbegin.o):g" \
-		-e "s:/usr/lib/crtend.o:$(`tc-getCC` -print-file-name=crtend.o):g" \
-		"${S}"/src/s/freebsd.h || die "unable to sed freebsd.h settings"
 
 	if ! use alsa; then
 		# ALSA is detected even if not requested by its USE flag.
@@ -118,15 +119,21 @@ src_prepare() {
 			|| die "unable to sed configure.in"
 	fi
 
-	eautoreconf
+	epatch "${FILESDIR}"/${PN}-24.0.9999-crt.patch
+	epatch "${FILESDIR}"/${PN}-24.0.9999-ns-dir.patch
+	epatch "${FILESDIR}"/${PN}-24.0.9999-ns.patch
+
+	AT_M4DIR=m4 eautoreconf
 }
 
 src_configure() {
 	ALLOWED_FLAGS=""
 	strip-flags
-	#unset LDFLAGS
+
 	if use sh; then
 		replace-flags -O[1-9] -O0		#262359
+	elif use ia64; then
+		replace-flags -O[2-9] -O1		#325373
 	else
 		replace-flags -O[3-9] -O2
 	fi
@@ -143,14 +150,20 @@ src_configure() {
 		myconf="${myconf} $(use_with sound)"
 	fi
 
+	myconf="${myconf} $(use_with libxml2 xml2)"
+	myconf="${myconf} $(use_with imagemagick)"
+	myconf="${myconf} $(use_with gif) $(use_with jpeg)"
+	myconf="${myconf} $(use_with png) $(use_with svg rsvg)"
+	myconf="${myconf} $(use_with tiff) $(use_with xpm)"
+
 	if use X; then
-		myconf="${myconf} --with-x"
-		myconf="${myconf} $(use_with gconf)"
+		myconf="${myconf} --with-x --without-ns"
+		myconf="${myconf} $(use_with gconf) $(use_with libxml2)"
 		myconf="${myconf} $(use_with toolkit-scroll-bars)"
 		myconf="${myconf} $(use_with gif) $(use_with jpeg)"
 		myconf="${myconf} $(use_with png) $(use_with svg rsvg)"
 		myconf="${myconf} $(use_with tiff) $(use_with xpm)"
-		myconf="${myconf} $(use_with xft)"
+		myconf="${myconf} $(use_with imagemagick) $(use_with xft)"
 
 		if use xft; then
 			myconf="${myconf} $(use_with m17n-lib libotf)"
@@ -185,45 +198,55 @@ src_configure() {
 				&& ewarn "USE flag \"${f}\" ignored (superseded by \"${tk}\")"
 			tk="${tk}${tk:+ }${f}"
 		done
+	elif use aqua; then
+		einfo "Configuring to build with Cocoa support"
+		myconf="${myconf} --with-ns --disable-ns-self-contained"
+		myconf="${myconf} --without-x --with-ns-app-dir=${EPREFIX}/Applications/Emacs.app"
 	else
 		myconf="${myconf} --without-x"
 	fi
 
-	if use ns; then
-		myconf="${myconf} --with-ns"
-	fi
-
-	myconf="${myconf} $(use_with hesiod)"
-	myconf="${myconf} $(use_with kerberos) $(use_with kerberos kerberos5)"
-	myconf="${myconf} $(use_with gpm) $(use_with dbus)"
-
-	# use prefix || --with-crt-dir="${EPREFIX}"/usr/$(get_libdir) \
+	# According to configure, this option is only used for GNU/Linux
+	# (x86_64 and s390). For Gentoo Prefix we have to explicitly spell
+	# out the location because $(get_libdir) does not necessarily return
+	# something that matches the host OS's libdir naming (e.g. RHEL).
+	local crtdir=$($(tc-getCC) -print-file-name=crt1.o)
+	crtdir=${crtdir%/*}
 
 	econf \
 		--program-suffix=-${EMACS_SUFFIX} \
 		--infodir="${EPREFIX}"/usr/share/info/${EMACS_SUFFIX} \
-		${myconf} || die "econf emacs failed"
+		--with-crt-dir="${crtdir}" \
+		--with-gameuser="${GAMES_USER_DED:-games}" \
+		--without-compress-info \
+		$(use_with hesiod) \
+		$(use_with kerberos) $(use_with kerberos kerberos5) \
+		$(use_with gpm) \
+		$(use_with dbus) \
+		$(use_with gnutls) \
+		$(use_with selinux) \
+		${myconf}
 }
 
 src_compile() {
 	export SANDBOX_ON=0			# for the unbelievers, see Bug #131505
 	if [ "${PV##*.}" = "9999" ]; then
-		emake CC="$(tc-getCC)" bootstrap || die "make bootstrap failed"
+		emake CC="$(tc-getCC)" bootstrap
 		# cleanup, otherwise emacs will be dumped again in src_install
 		(cd src; emake versionclean)
 	fi
-	emake CC="$(tc-getCC)" || die "emake failed"
+	emake CC="$(tc-getCC)"
 }
 
 src_install () {
 	local i m
 
-	emake install DESTDIR="${D}" || die "make install failed"
+	emake install -j1 DESTDIR="${D}"
 
-	if use ns; then
-		dodir /Applications
-		mv "${D}/${S}"/nextstep/Emacs.app "${ED}"/Applications/Emacs.app || die
-		rm -rf "${ED}"/var/tmp || die
+	if use aqua; then
+		mv "${ED}"/Applications/Emacs.app/Contents/MacOS/bin/emacs-${EMACS_SUFFIX} \
+			"${ED}"/Applications/Emacs.app/Contents/MacOS/bin/${EMACS_SUFFIX} \
+			|| die "moving Emacs executable failed"
 	else
 		rm "${ED}"/usr/bin/emacs-${FULL_VERSION}-${EMACS_SUFFIX} \
 			|| die "removing duplicate emacs executable failed"
@@ -231,15 +254,16 @@ src_install () {
 			|| die "moving Emacs executable failed"
 	fi
 
-	# move info documentation to the correct place
-	for i in "${ED}"/usr/share/info/${EMACS_SUFFIX}/*; do
-		mv "${i}" "${i}.info" || die "mv info failed"
-	done
-
 	# move man pages to the correct place
 	for m in "${ED}"/usr/share/man/man1/* ; do
 		mv "${m}" "${m%.1}-${EMACS_SUFFIX}.1" || die "mv man failed"
 	done
+
+	# move info dir to avoid collisions with the dir file generated by portage
+	mv "${ED}"/usr/share/info/${EMACS_SUFFIX}/dir{,.orig} \
+		|| die "moving info dir failed"
+	touch "${ED}"/usr/share/info/${EMACS_SUFFIX}/.keepinfodir
+	docompress -x /usr/share/info/${EMACS_SUFFIX}/dir.orig
 
 	# avoid collision between slots, see bug #169033 e.g.
 	rm "${ED}"/usr/share/emacs/site-lisp/subdirs.el
@@ -276,23 +300,25 @@ src_install () {
 	EOF
 	elisp-site-file-install "${T}/${SITEFILE}" || die
 
-	dodoc README BUGS || die "dodoc failed"
+	dodoc README BUGS
 }
 
-emacs-infodir-rebuild() {
-	# Depending on the Portage version, the Info dir file is compressed
-	# or removed. It is only rebuilt by Portage if our directory is in
-	# INFOPATH, which is not guaranteed. So we rebuild it ourselves.
-
+pkg_preinst() {
+	# move Info dir file to correct name
 	local infodir=/usr/share/info/${EMACS_SUFFIX} f
-	[ -d "${EROOT}"${infodir} ] || return	# may occur with FEATURES=noinfo
-	einfo "Regenerating Info directory index in ${infodir} ..."
-	rm -f "${EROOT}"${infodir}/dir{,.*}
-	for f in "${EROOT}"${infodir}/*.info*; do
-		[[ ${f##*/} != *[0-9].info* && -e ${f} ]] \
-			&& install-info --info-dir="${EROOT}"${infodir} "${f}" &>/dev/null
-	done
-	rmdir "${EROOT}"${infodir} 2>/dev/null	# remove dir if it is empty
+	if [ -f "${ED}"${infodir}/dir.orig ]; then
+		mv "${ED}"${infodir}/dir{.orig,} || die "moving info dir failed"
+	else
+		# this should not happen in EAPI 4
+		ewarn "Regenerating Info directory index in ${infodir} ..."
+		rm -f "${ED}"${infodir}/dir{,.*}
+		for f in "${ED}"${infodir}/*; do
+			if [[ ${f##*/} != *-[0-9]* && -e ${f} ]]; then
+				install-info --info-dir="${ED}"${infodir} "${f}" \
+					|| die "install-info failed"
+			fi
+		done
+	fi
 }
 
 pkg_postinst() {
@@ -300,10 +326,9 @@ pkg_postinst() {
 	for f in "${EROOT}"/var/lib/games/emacs/{snake,tetris}-scores; do
 		[ -e "${f}" ] || touch "${f}"
 	done
-	chown games:games "${EROOT}"/var/lib/games/emacs
+	chown "${GAMES_USER_DED:-games}" "${EROOT}"/var/lib/games/emacs
 
 	elisp-site-regen
-	emacs-infodir-rebuild
 	eselect emacs update ifunset
 
 	if use X; then
@@ -328,6 +353,5 @@ pkg_postinst() {
 
 pkg_postrm() {
 	elisp-site-regen
-	emacs-infodir-rebuild
 	eselect emacs update ifunset
 }
